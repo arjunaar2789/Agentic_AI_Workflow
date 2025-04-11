@@ -13,11 +13,11 @@ LangGraph and Tavily Integration: Utilizes LangGraph for structured agent workfl
 
 # Repository Structure
 The repository is organized as follows:​
-'''
+```
 Agentic_AI_Workflow/
 ├── langgraph_agent_with_persistence.py  # Main script implementing the agentic workflow with persistent memory
 ├── README.md                            # Project overview and documentation
 └── requirements.txt                     # List of project dependencies
-'''
+```
 
 

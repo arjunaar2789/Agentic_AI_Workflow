@@ -52,5 +52,10 @@ The repository is organized as follows:​
 # Usage
 Once the agent runs, you can interact with it through the local host link in any browser (Chrome, Firefox, Edge, etc.). This multi-functional agent has persistence in place, which has the memory of the prompts given earlier in a specific thread. You can choose between various threads by starting a new chat. 
 
+# Demo 
+
+
+https://github.com/user-attachments/assets/6876d09d-23e1-4da2-9211-6b8fa8192bf4
+
 
 

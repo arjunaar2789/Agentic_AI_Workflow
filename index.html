@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Smart AI Agent Chat</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ensure body takes full height */
+        }
+        .chat-container {
+            width: 90%;
+            max-width: 700px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Contain children */
+            height: 85vh; /* Fixed height */
+        }
+        .chat-header {
+            background-color: #5b6d7a; /* Steel blue */
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.2em;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        .messages {
+            flex-grow: 1; /* Take available space */
+            overflow-y: auto; /* Enable scrolling */
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px; /* Space between messages */
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px; /* Bubble effect */
+            max-width: 75%;
+            line-height: 1.5;
+             word-wrap: break-word; /* Ensure long words break */
+        }
+        .human {
+            background-color: #d1eaff; /* Lighter blue */
+            color: #333;
+            align-self: flex-end; /* Align right */
+            border-bottom-right-radius: 4px; /* Flat corner */
+            margin-left: auto; /* Push to right */
+        }
+        .ai {
+            background-color: #e9f5e9; /* Lighter green */
+            color: #333;
+            align-self: flex-start; /* Align left */
+            border-bottom-left-radius: 4px; /* Flat corner */
+            margin-right: auto; /* Push to left */
+        }
+        .tool {
+            background-color: #f0f0f0; /* Light grey */
+            color: #555;
+            font-size: 0.9em;
+            font-style: italic;
+            align-self: flex-start; /* Align left like AI */
+            border-bottom-left-radius: 4px;
+            margin-right: auto;
+             max-width: 85%; /* Can be wider */
+             border: 1px dashed #ccc;
+        }
+        .message strong { /* Speaker label */
+            display: block;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 4px;
+            color: #555;
+        }
+        .human strong { color: #0056b3; }
+        .ai strong { color: #285c2d; }
+        .tool strong { color: #666; }
+
+        /* Ensure preformatted text inside AI messages wraps */
+        .ai pre {
+            white-space: pre-wrap;       /* CSS3 */
+            white-space: -moz-pre-wrap;  /* Firefox */
+            white-space: -pre-wrap;      /* Opera <7 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* IE */
+            margin: 0;
+            font-family: inherit; /* Inherit body font */
+            font-size: 1em;
+        }
+
+        .input-area {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+            background-color: #f9f9f9;
+        }
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 20px; /* Pill shape */
+            margin-right: 10px;
+            font-size: 1em;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #5b6d7a;
+            color: white;
+            border: none;
+            border-radius: 20px; /* Pill shape */
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+        button:hover {
+            background-color: #4a5a66;
+        }
+        .clear-link {
+            display: block;
+            text-align: center;
+            margin: 10px 0 5px 0;
+            font-size: 0.9em;
+            color: #666;
+            text-decoration: none;
+        }
+        .clear-link:hover {
+             color: #333;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">A Smart AI Agent using ReAct Pattern</div>
+        <div class="messages" id="messages">
+            {% for msg in chat_history %}
+                {% if msg.type == 'human' %}
+                    <div class="message human">
+                        <strong>You:</strong>
+                        {{ msg.content }}
+                    </div>
+                {% elif msg.type == 'ai' %}
+                    <div class="message ai">
+                        <strong>AI:</strong>
+                         {% if msg.tool_calls %}
+                             <!-- Optional: Indicate thinking/tool use before result -->
+                             <em style="font-size: 0.85em; color: #777;">(Using tool: {{ msg.tool_calls[0].name }}...)</em>
+                             <br> <!-- Add a line break -->
+                         {% endif %}
+                         <!-- Use <pre> for potentially formatted AI content -->
+                         <pre>{{ msg.content }}</pre>
+                    </div>
+                {% elif msg.type == 'tool' %}
+                     <!-- MODIFIED: Show confirmation, hide raw content -->
+                     <div class="message tool">
+                        <strong>Tool Action [{{ msg.name }}]:</strong>
+                        <em>Tool executed. Waiting for AI analysis...</em>
+                        <!-- Raw content is available in the HTML source but not displayed -->
+                        <!-- <pre style="display:none;">{{ msg.content }}</pre> -->
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <form class="input-area" method="POST" action="{{ url_for('index') }}">
+            <input type="text" name="message" placeholder="Ask something..." autocomplete="off" required>
+            <button type="submit">Send</button>
+        </form>
+         <a href="{{ url_for('clear_session') }}" class="clear-link">Start New Chat</a>
+    </div>
+
+    <script>
+        // Scroll messages to the bottom on page load/update
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    </script>
+</body>
+</html>

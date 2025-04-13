@@ -15,10 +15,8 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 load_dotenv()
 
 # --- Agent Definition ---
-tool = TavilySearchResults(max_results=3) # Reduced results for brevity
+tool = TavilySearchResults(max_results=3) 
 tools = [tool]
-# Keep tool_map separate for Agent class if needed, or handle inside
-# tool_map = {t.name: t for t in tools} # Not strictly needed by Agent class below
 
 prompt ='''You are an expert research assistant with advanced information retrieval skills. Your primary goal is to provide comprehensive, accurate, and well-structured information through strategic search engine utilization.
 
@@ -68,7 +66,6 @@ class Agent:
 
     def call_model(self, state: AgentState):
         messages = state["messages"]
-        # ... (system message logic) ...
 
         print(f"DEBUG: Calling model with: {messages}")
         response = None  # Initialize response
@@ -76,9 +73,6 @@ class Agent:
             # Invoke the model
             response = self.model.invoke(messages)
             print(f"DEBUG: Raw model response object: {response}")  # Log the raw response
-
-            # --- IMPORTANT CHECK: Ensure response is a BaseMessage ---
-            # Sometimes .invoke might return just a string depending on model/version
             if isinstance(response, str):
                 print(f"DEBUG: Model returned a string, wrapping in AIMessage.")
                 response = AIMessage(content=response)
@@ -89,21 +83,16 @@ class Agent:
 
         except Exception as e:
             print(f"ERROR: Model invocation failed: {e}")
-            # Ensure error response is also a valid message type
             response = AIMessage(content=f"Sorry, I encountered an error processing that: {e}")
 
-        # **** ADD THIS PRINT ****
-        # Ensure we are returning a list containing a valid message object
         messages_to_return = []
         if response:
             messages_to_return = [response]
         else:
-            # Should not happen based on above logic, but as a fallback
             print("ERROR: No response generated in call_model!")
             messages_to_return = [AIMessage(content="Error: Could not generate response.")]
 
         print(f"DEBUG: call_model returning: {messages_to_return}")
-        # **** END ADDED PRINT ****
 
         return {"messages": messages_to_return}
 
@@ -118,25 +107,16 @@ class Agent:
             results.append(ToolMessage(tool_call_id=t["id"], name=t["name"], content=str(result)))
         return {"messages": results}
 
-# --- Global Initialization using File Persistence (from working script) ---
 db_file = "agent_memory.sqlite"
 
-# Create the connection object explicitly
-# check_same_thread=False is important for use with web servers like Flask
 conn = sqlite3.connect(db_file, check_same_thread=False)
 
 # Instantiate SqliteSaver directly using the connection
 memory = SqliteSaver(conn=conn)
 
-# Initialize the agent components globally ONCE
-# Pass the actual SqliteSaver instance as the checkpointer
 abot_agent = Agent(model, tools, system=prompt, checkpointer=memory) # Pass tools list here
 
-# Optional: Define a function to close the connection when the app exits
 def close_db_connection():
     print("Closing database connection.")
     if conn:
         conn.close()
-
-# import atexit
-# atexit.register(close_db_connection) # Register cleanup function if desired

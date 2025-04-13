@@ -5,7 +5,6 @@ from flask import Flask, render_template, request, session, redirect, url_for
 from dotenv import load_dotenv
 
 # Import agent components from the module
-# Make sure langgraph_agent_module.py is in the same directory
 from langgraph_agent_module import abot_agent, HumanMessage, db_file
 
 load_dotenv()
@@ -29,7 +28,6 @@ def get_chat_history(thread_id: str):
 # --- Flask Routes ---
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # Get or create a unique ID for the conversation thread stored in the user's session
     if 'thread_id' not in session:
         session['thread_id'] = str(uuid.uuid4())
         print(f"New session, thread_id: {session['thread_id']}")
@@ -46,13 +44,10 @@ def index():
             try:
                 # Run the agent graph. The stream processes messages, calls tools, etc.
                 # Persistence (saving state) happens automatically via the checkpointer.
-                # We don't need to capture the output here if we reload history below.
                 abot_agent.graph.invoke({'messages': messages}, config)
                 print(f"Agent invoked for thread {thread_id}")
             except Exception as e:
                 print(f"ERROR invoking agent for thread {thread_id}: {e}")
-                # You could add an error message to the history here if needed
-                # For simplicity, we just print the error server-side.
 
             # Redirect back to the same page (GET request) to display updated history
             return redirect(url_for('index'))
